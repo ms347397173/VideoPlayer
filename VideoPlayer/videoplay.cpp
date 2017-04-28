@@ -26,7 +26,8 @@ VideoPlay::~VideoPlay()
 
 bool VideoPlay::Init()
 {
-    QByteArray ba=_filePath.toLatin1();
+    //QByteArray ba=_filePath.toLatin1();
+    QByteArray ba=_filePath.toLocal8Bit();
     const char * filePath=ba.data();
 
     _decoder=new VideoDecoder;

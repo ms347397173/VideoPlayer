@@ -23,7 +23,8 @@ private:
     VideoPlay * vp;
 
 private slots:
-    void OpenFile();
+    void OnClickedOpenFile();
+    void OnClickedPlay();
 
 };
 

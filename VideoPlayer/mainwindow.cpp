@@ -10,7 +10,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //创建对象
     vp = new VideoPlay(ui->VideoWindow);
-    connect(ui->button_openfile,SIGNAL(clicked()),this,SLOT(OpenFile()));
+    connect(ui->button_openfile,SIGNAL(clicked()),this,SLOT(OnClickedOpenFile()));
+    connect(ui->button_play,SIGNAL(clicked()),this,SLOT(OnClickedPlay()));
 
 }
 
@@ -22,9 +23,26 @@ MainWindow::~MainWindow()
 }
 
 
-void MainWindow::OpenFile()
+void MainWindow::OnClickedOpenFile()
 {
     QString filePath=QFileDialog::getOpenFileName(NULL,QString(),QString());
     vp->SetFilePath(filePath);
     qDebug()<<"filepath:"<<vp->GetFilePath()<<endl;
+}
+
+
+void MainWindow::OnClickedPlay()
+{
+    if(!vp->Init())
+    {
+        qDebug()<<"init failed"<<endl;
+        return;
+    }
+    else
+    {
+        qDebug()<<"init successed"<<endl;
+    }
+
+    //播放
+    vp->Paly();
 }

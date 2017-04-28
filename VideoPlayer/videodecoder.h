@@ -10,6 +10,7 @@ extern "C"
 #include<libswscale/swscale.h>
 }
 #include<QString>
+#include<QDebug>
 class VideoDecoder
 {
 

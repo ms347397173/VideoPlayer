@@ -35,16 +35,17 @@ public:
     enum play_state_type SetPlayState(enum play_state_type newPlayState);  //return old play state
     enum play_state_type GetPlayState();
 
-//private functions
-private:
     bool Init();
     bool UnInit();
+//private functions
+private:
+
 
 //private vars
 private:
     QString _filePath;
     enum play_state_type _playState;
-    QWidget * _widget;
+    QWidget * _widget;  //used sdl
 
     SDLDispaly *_sdlHandle;
 

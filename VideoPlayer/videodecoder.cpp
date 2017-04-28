@@ -30,6 +30,7 @@ bool VideoDecoder::Init(const char * filePath)
             break;
         }
     }
+    qDebug()<<"index:"<<videoIndex<<endl;
     if (videoIndex==-1)
     {
         printf("Didn't find a vedio stream \n");

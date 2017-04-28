@@ -18,3 +18,20 @@ bool SDLDispaly::UnInit()
     SDL_Quit();
     return true;
 }
+
+
+int SDLDispaly::SetHeight(int height)
+{
+    int oldHeight;
+    oldHeight=screen_h;
+    screen_h=height;
+    return oldHeight;
+}
+
+int SDLDispaly::SetWidth(int width)
+{
+    int oldWidth;
+    oldWidth=screen_w;
+    screen_w=width;
+    return oldWidth;
+}

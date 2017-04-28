@@ -14,6 +14,9 @@ public:
     bool Init();
     bool UnInit();
 
+    int SetWidth(int width);
+    int SetHeight(int height);
+
 private:
     //SDL vars
     int screen_w=0, screen_h=0;
