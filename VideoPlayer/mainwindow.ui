@@ -14,7 +14,7 @@
    <string>VideoPlayer</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QWidget" name="VideoWindow" native="true">
+   <widget class="QWidget" name="videoWindow" native="true">
     <property name="geometry">
      <rect>
       <x>0</x>

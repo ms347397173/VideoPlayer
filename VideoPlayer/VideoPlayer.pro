@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
+QT += testlib
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -25,14 +26,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    videoplay.cpp \
-    videodecoder.cpp \
-    sdldispaly.cpp
+    videoplay.cpp
 
 HEADERS  += mainwindow.h \
-    videoplay.h \
-    videodecoder.h \
-    sdldispaly.h
+    videoplay.h
 
 FORMS    += mainwindow.ui
 

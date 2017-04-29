@@ -9,9 +9,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     //创建对象
-    vp = new VideoPlay(ui->VideoWindow);
+    vp = new VideoPlay(NULL);  //把widget传入VideoPlay对象中
     connect(ui->button_openfile,SIGNAL(clicked()),this,SLOT(OnClickedOpenFile()));
     connect(ui->button_play,SIGNAL(clicked()),this,SLOT(OnClickedPlay()));
+
 
 }
 
@@ -20,6 +21,7 @@ MainWindow::~MainWindow()
     delete ui;
     //删除、析构对象
     delete vp;
+    vp=NULL;
 }
 
 
@@ -33,16 +35,13 @@ void MainWindow::OnClickedOpenFile()
 
 void MainWindow::OnClickedPlay()
 {
-    if(!vp->Init())
+
+    if(vp->GetFilePath().isEmpty())
     {
-        qDebug()<<"init failed"<<endl;
+        qDebug()<<"no file"<<endl;
         return;
     }
-    else
-    {
-        qDebug()<<"init successed"<<endl;
-    }
 
-    //播放
-    vp->Paly();
+    vp->start();
+
 }
