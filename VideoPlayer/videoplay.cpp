@@ -1,17 +1,53 @@
 #include"videoplay.h"
 
+int thread_exit=0;
+int thread_pause=0;
+#define SFM_REFRESH_EVENT  (SDL_USEREVENT + 1)
+#define SFM_BREAK_EVENT  (SDL_USEREVENT + 2)
 
-VideoPlay::VideoPlay(QWidget * parent)
-    :QWidget(parent)
-{
-    QThread::moveToThread(this);
+int sfp_refresh_thread(void *opaque){
+
+    int * fps=(int*)opaque;
+    int delayTime=1000/(*fps);
+
+    thread_exit=0;
+    thread_pause=0;
+
+    while (thread_exit==0) {
+        if(!thread_pause){
+            SDL_Event event;
+            event.type = SFM_REFRESH_EVENT;
+            SDL_PushEvent(&event);
+        }
+        SDL_Delay(delayTime);
+    }
+    //Quit
+    SDL_Event event;
+    event.type = SFM_BREAK_EVENT;
+    SDL_PushEvent(&event);
+    thread_exit=0;
+    thread_pause=0;
+    return 0;
 }
 
-VideoPlay::VideoPlay(QWidget * parent,QString filePath)
-    :QWidget(parent)  //委托构造
+
+
+VideoPlay::VideoPlay(QWidget * wParent,QObject* oParent)
+    :QWidget(wParent)
+    ,QThread(oParent)
+{
+    QThread::moveToThread(this);
+
+
+}
+
+VideoPlay::VideoPlay(QWidget * wParent,QString filePath,QObject* oParent)
+    :QWidget(wParent)
+    ,QThread(oParent)
     ,_filePath(filePath)
 {
      QThread::moveToThread(this);
+
 }
 
 VideoPlay::~VideoPlay()
@@ -128,48 +164,54 @@ bool VideoPlay::Init()
 
     window=SDL_CreateWindowFrom((void *)winId());
 
-    sdlRenderer=SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);  //设置软件渲染
+    sdlRenderer=SDL_CreateRenderer(window,-1,0);  //设置软件渲染
     sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, width, height);
     sdlRect.x = 0;
     sdlRect.y = 0;
     sdlRect.w = width;
     sdlRect.h = height;
 
+    video_tid = SDL_CreateThread(sfp_refresh_thread,NULL,&fps);
+
+    show();
     return true;
 }
 
 int VideoPlay::PlayVideo()
 {
-    int delayTime=1000/fps;
-    while(1)
-    {
-        if (av_read_frame(pFormatCtx, pPacket) >= 0)
-        {
-            if (pPacket->stream_index == videoIndex)
-            {
-                ret = avcodec_decode_video2(pCodecCtx, pFrame, &gotPicture, pPacket);
-                if (ret < 0)
-                {
-                    printf("Decode Error.\n");
-                    return -1;
+    for (;;) {
+        //Wait
+        SDL_WaitEvent(&event);
+        if(event.type==SFM_REFRESH_EVENT){
+            //------------------------------
+            if(av_read_frame(pFormatCtx, pPacket)>=0){
+                if(pPacket->stream_index==videoIndex){
+                    ret = avcodec_decode_video2(pCodecCtx, pFrame, &gotPicture, pPacket);
+                    if(ret < 0){
+                        qDebug()<<"decode error"<<endl;
+                        return -1;
+                    }
+                    if(gotPicture){
+                        sws_scale(pimgConvertCtx, (const uint8_t* const*)pFrame->data, pFrame->linesize, 0, pCodecCtx->height, pFrameYUV->data, pFrameYUV->linesize);
+                        //SDL---------------------------
+                        SDL_UpdateTexture( sdlTexture, NULL, pFrameYUV->data[0], pFrameYUV->linesize[0] );
+                        SDL_RenderClear( sdlRenderer );
+                        //SDL_RenderCopy( sdlRenderer, sdlTexture, &sdlRect, &sdlRect );
+                        SDL_RenderCopy( sdlRenderer, sdlTexture, NULL, NULL);
+                        SDL_RenderPresent( sdlRenderer );
+                    }
                 }
-                if (gotPicture)
-                {
-                    sws_scale(pimgConvertCtx, (const uint8_t * const *)pFrame->data, pFrame->linesize, 0, pCodecCtx->height, pFrameYUV->data, pFrameYUV->linesize);
-
-                    //输出YUV数据 来自pFrameYUV
-                    //输出YUV数据 来自pFrameYUV
-                    SDL_UpdateTexture(sdlTexture, NULL, pFrameYUV->data[0], pFrameYUV->linesize[0]); //更新纹理
-                    SDL_RenderClear(sdlRenderer);  //清空渲染器
-                    SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, NULL);
-                    SDL_RenderPresent(sdlRenderer);
-
-                }
-
+                av_free_packet(pPacket);
+            }else{
+                //Exit Thread
+                thread_exit=1;
             }
-            av_free_packet(pPacket);  //每次调用read前调用该函数
+        }else if(event.type==SDL_QUIT){
+            thread_exit=1;
+        }else if(event.type==SFM_BREAK_EVENT){
+            break;
         }
-        SDL_Delay(delayTime);
+
     }
     return 0;
 }
@@ -215,9 +257,9 @@ enum play_state_type VideoPlay::GetPlayState()
     return this->_playState;
 }
 
-
 void VideoPlay::run()
 {
+    /*
     if(!Init())
     {
         qDebug()<<"init failed"<<endl;
@@ -227,8 +269,8 @@ void VideoPlay::run()
     {
         qDebug()<<"init successed"<<endl;
     }
+    */
     PlayVideo();
-
 }
 
 

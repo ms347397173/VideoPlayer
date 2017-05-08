@@ -1,8 +1,17 @@
 #ifndef VIDEOPLAY_H
 #define VIDEOPLAY_H
 
-#include"videodecoder.h"
-#include"sdldispaly.h"
+#define SDL_MAIN_HANDLED
+#define __STDC_CONSTANT_MACROS
+extern "C"
+{
+
+#include<libavcodec/avcodec.h>
+#include<libavformat/avformat.h>
+#include<libswscale/swscale.h>
+#include<SDL.h>
+}
+
 
 #include<QObject>
 #include<QString>
@@ -21,8 +30,8 @@ class VideoPlay: public QThread ,public QWidget
     Q_OBJECT
 public:
     //Construct Function
-    VideoPlay(QWidget * parent);
-    VideoPlay(QWidget * parent,QString filePath);
+    VideoPlay(QWidget * wParent,QObject* oParent=0);
+    VideoPlay(QWidget * wParent,QString filePath,QObject* oParent=0);
 
     ~VideoPlay();
 
