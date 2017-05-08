@@ -37,8 +37,6 @@ VideoPlay::VideoPlay(QWidget * wParent,QObject* oParent)
     ,QThread(oParent)
 {
     QThread::moveToThread(this);
-
-
 }
 
 VideoPlay::VideoPlay(QWidget * wParent,QString filePath,QObject* oParent)
@@ -60,6 +58,7 @@ bool VideoPlay::Init()
     //QByteArray ba=_filePath.toLatin1();
     if(_filePath.isEmpty())
     {
+        isInit=false;
         return false;
     }
 
@@ -72,11 +71,13 @@ bool VideoPlay::Init()
     if (avformat_open_input(&pFormatCtx, filePath, NULL, NULL) != 0)	//打开文件
     {
         printf("open input stream failed \n");
+        isInit=false;
         return false;
     }
     if (avformat_find_stream_info(pFormatCtx, NULL) < 0)  //寻找流信息
     {
         printf("Couldn't find stream infomation\n");
+        isInit=false;
         return false;
     }
 
@@ -94,6 +95,7 @@ bool VideoPlay::Init()
     if (videoIndex==-1)
     {
         printf("Didn't find a vedio stream \n");
+        isInit=false;
         return false;
     }
 
@@ -101,6 +103,7 @@ bool VideoPlay::Init()
     if (pCodecCtx == NULL)
     {
         printf("Could not allocate AVCodecContext\n");
+        isInit=false;
         return false;
     }
 
@@ -110,11 +113,13 @@ bool VideoPlay::Init()
     if (pCodec == NULL)
     {
         printf("decoder not found\n");
+        isInit=false;
         return false;
     }
     if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0)
     {
         printf("Could not open codec \n");
+        isInit=false;
         return false;
     }
 
@@ -127,13 +132,15 @@ bool VideoPlay::Init()
     pimgConvertCtx = sws_getContext(pCodecCtx->width,
     pCodecCtx->height,
     pCodecCtx->pix_fmt,
-    pCodecCtx->width,
-    pCodecCtx->height,
+    this->QWidget::width(),
+    this->QWidget::height(),
     AV_PIX_FMT_YUV420P,
     SWS_BICUBIC,
     NULL,
     NULL,
     NULL);
+
+
 
     pPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
 
@@ -159,6 +166,7 @@ bool VideoPlay::Init()
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER))
     {
         printf("Could not initialize SDL - %s\n", SDL_GetError());
+        isInit=false;
         return false;
     }
 
@@ -174,12 +182,13 @@ bool VideoPlay::Init()
     video_tid = SDL_CreateThread(sfp_refresh_thread,NULL,&fps);
 
     show();
+    isInit=true;
     return true;
 }
 
 int VideoPlay::PlayVideo()
 {
-    for (;;) {
+    while (!stopped) {
         //Wait
         SDL_WaitEvent(&event);
         if(event.type==SFM_REFRESH_EVENT){
@@ -213,6 +222,7 @@ int VideoPlay::PlayVideo()
         }
 
     }
+
     return 0;
 }
 
@@ -220,16 +230,25 @@ int VideoPlay::PlayVideo()
 
 bool VideoPlay::UnInit()
 {
+    if(_playState==PLAY || _playState==PAUSE)
+    {
+        thread_exit=1;
+    }
+
+    sws_freeContext(pimgConvertCtx);
     //SDL uninit
     SDL_Quit();
 
+    SDL_DestroyWindow(window);
     //ffmpeg uninit
-    sws_freeContext(pimgConvertCtx);
+
     av_frame_free(&pFrame);
     av_frame_free(&pFrameYUV);
     avcodec_close(pCodecCtx);
     avformat_close_input(&pFormatCtx);
 
+
+    isInit=false;
     return true;
 }
 
@@ -274,3 +293,36 @@ void VideoPlay::run()
 }
 
 
+bool VideoPlay::IsInit()
+{
+    return isInit;
+}
+
+void VideoPlay::Play()
+{
+    SetPlayState(PLAY);
+    thread_pause=0;
+}
+
+void VideoPlay::Pause()
+{
+    SetPlayState(PAUSE);
+    thread_pause=1;
+}
+
+
+void VideoPlay::Stop()
+{
+    SetPlayState(STOP);
+    thread_exit=1;
+}
+
+int VideoPlay::GetWidth()
+{
+    return width;
+}
+
+int VideoPlay::GetHeight()
+{
+    return height;
+}

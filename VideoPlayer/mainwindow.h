@@ -20,11 +20,13 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    VideoPlay * vp;
+    VideoPlay * vp=NULL;
 
 private slots:
     void OnClickedOpenFile();
     void OnClickedPlay();
+    void OnClickedPause();
+    void OnClickedStop();
 
 };
 

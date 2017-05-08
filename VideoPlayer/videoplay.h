@@ -42,9 +42,21 @@ public:
     enum play_state_type GetPlayState();
 
     bool Init();
-    bool UnInit();
+    bool UnInit();\
+
+    bool IsInit();
 
     int PlayVideo();
+
+public:
+    void Play();
+    void Pause();
+    void Stop();
+
+    int GetWidth();
+    int GetHeight();
+
+
 //private functions
 private:
 
@@ -56,7 +68,7 @@ protected:
 //private vars
 private:
     QString _filePath;
-    enum play_state_type _playState;
+    enum play_state_type _playState=STOP;
 
     //ffmpeg vars
     AVFormatContext *pFormatCtx=NULL;
@@ -79,9 +91,9 @@ private:
     SDL_Rect sdlRect;
     SDL_Thread *video_tid=NULL;
     SDL_Event event;
+    bool isInit=false;
+    bool stopped=false;
 
-    //thread vars
-    volatile bool _stopped=false;
 };
 
 
